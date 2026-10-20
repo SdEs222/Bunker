@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Бункер №7</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  body { font-family: sans-serif; background: #1b1b1e; color: #eee; margin: 0; padding: 16px; }
+  h1 { font-size: 22px; } h2 { font-size: 16px; color: #c9a227; }
+  .card { background: #26262b; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .btn { display: block; width: 100%; padding: 12px; margin-top: 8px; border: 0;
+         border-radius: 10px; background: #c9a227; color: #1b1b1e; font-weight: bold; font-size: 15px; }
+  select, input { width: 100%; padding: 10px; margin-top: 6px; border-radius: 8px; border: 0; }
+  #status { margin-top: 10px; color: #7bd389; }
+</style>
+</head>
+<body>
+<h1>🔒 Бункер №7</h1>
+
+<div class="card">
+  <h2>Военный билет жителя</h2>
+  <div id="rank">Звание: Новобранец</div>
+  <div id="points">Баллы: 0</div>
+</div>
+
+<div class="card">
+  <h2>Бронь стола</h2>
+  <label>Дата</label>
+  <input type="date" id="date">
+  <label>Гостей</label>
+  <select id="guests">
+    <option>2</option><option>4</option><option>6</option><option>8+</option>
+  </select>
+  <button class="btn" onclick="book()">Забронировать</button>
+  <div id="status"></div>
+</div>
+
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.expand();
+
+  // Данные жителя: мини-приложение получает их через initData,
+  // а подтверждённые баллы бот пришлёт событием ниже
+  tg.onEvent('receiveData', () => {});
+
+  function book() {
+    const data = {
+      action: 'book',
+      date: document.getElementById('date').value,
+      guests: document.getElementById('guests').value,
+      user: tg.initDataUnsafe?.user?.id
+    };
+    if (!data.date) { document.getElementById('status').textContent = 'Выберите дату'; return; }
+    // Отправляем заявку боту
+    tg.sendData(JSON.stringify(data));
+    document.getElementById('status').textContent = '✅ Заявка отправлена. Комендант свяжется с вами.';
+  }
+
+  // Обновление баллов: бот присылает через web_app_data
+  window.addEventListener('message', e => {
+    if (e.data && e.data.points !== undefined) {
+      document.getElementById('points').textContent = 'Баллы: ' + e.data.points;
+      document.getElementById('rank').textContent = 'Звание: ' + (e.data.points >= 500 ? 'Комендант' : e.data.points >= 200 ? 'Житель' : 'Новобранец');
+    }
+  });
+</script>
+</body>
+</html>
